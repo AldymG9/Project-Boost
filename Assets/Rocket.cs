@@ -5,6 +5,9 @@ public class Rocket : MonoBehaviour
 {
     [SerializeField] float rcsThrust = 100f;
     [SerializeField] float shipThrust = 10f;
+    [SerializeField] AudioClip mainEngine;
+    [SerializeField] AudioClip death;
+    [SerializeField] AudioClip success;
 
     AudioSource audioSource;
     Rigidbody rigidBody;
@@ -17,7 +20,7 @@ public class Rocket : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         rigidBody = GetComponent<Rigidbody>();
-        audioSource.Play(0);
+        audioSource.PlayOneShot(mainEngine);
     }
 
     // Update is called once per frame
@@ -33,20 +36,35 @@ public class Rocket : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
+        if (state != State.Alive) {return;}
         switch (collision.gameObject.tag)
         {
             case "Friendly":
                 print("OK"); //todo remove print
                 break;
             case "Finish":
-                state = State.Transcending;
-                Invoke("LoadNextScene", 1f);
+                StartSuccessSequence();
                 break;
             default:
-                state = State.Dying;
-                Invoke("LoadFirstScene",1f);
+                StartDeathSequence();
                 break;
         }
+    }
+
+    private void StartSuccessSequence()
+    {
+        state = State.Transcending;
+        audioSource.Stop();
+        audioSource.PlayOneShot(success);
+        Invoke("LoadNextScene", 1f);
+    }
+
+    private void StartDeathSequence()
+    {
+        state = State.Dying;
+        audioSource.Stop();
+        audioSource.PlayOneShot(death);
+        Invoke("LoadFirstScene", 1f);
     }
 
     private void LoadFirstScene()
